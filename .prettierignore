@@ -1,0 +1,11 @@
+node_modules
+dist
+.output
+.vinxi
+package-lock.json
+routeTree.gen.ts
+.nitro
+.tanstack
+
+# Preserve the original architecture memo.
+docs/PROJECT_PLAN.md

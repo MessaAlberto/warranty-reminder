@@ -1,0 +1,246 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Warranty Vault design system — "Kinetic Glass Vault".
+ * Frosted surfaces, restrained accent, status colours always paired with text.
+ * All colour values use oklch. Add new tokens to :root AND .dark, then
+ * register them in @theme inline.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: var(--font-body);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-healthy: var(--healthy);
+  --color-warn: var(--warn);
+  --color-expiring: var(--expiring);
+  --color-expired: var(--expired);
+
+  --shadow-glass: 0 12px 32px -18px oklch(0.24 0.028 250 / 0.45);
+  --shadow-accent: 0 10px 26px -10px var(--accent);
+}
+
+:root {
+  --radius: 1rem;
+  --background: oklch(0.962 0.006 240);
+  --foreground: oklch(0.24 0.028 250);
+  --surface: oklch(1 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.24 0.028 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.24 0.028 250);
+  --primary: oklch(0.24 0.028 250);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.94 0.008 245);
+  --secondary-foreground: oklch(0.24 0.028 250);
+  --muted: oklch(0.94 0.008 245);
+  --muted-foreground: oklch(0.52 0.025 250);
+  --accent: oklch(0.67 0.13 220);
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.6 0.19 18);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.24 0.028 250 / 0.1);
+  --input: oklch(0.24 0.028 250 / 0.12);
+  --ring: oklch(0.67 0.13 220);
+  --healthy: oklch(0.53 0.1 160);
+  --warn: oklch(0.7 0.14 70);
+  --expiring: oklch(0.63 0.18 35);
+  --expired: oklch(0.6 0.19 18);
+}
+
+.dark {
+  --background: oklch(0.19 0.021 250);
+  --foreground: oklch(0.96 0.005 250);
+  --surface: oklch(0.26 0.023 250);
+  --card: oklch(0.26 0.023 250);
+  --card-foreground: oklch(0.96 0.005 250);
+  --popover: oklch(0.26 0.023 250);
+  --popover-foreground: oklch(0.96 0.005 250);
+  --primary: oklch(0.96 0.005 250);
+  --primary-foreground: oklch(0.19 0.021 250);
+  --secondary: oklch(0.31 0.024 250);
+  --secondary-foreground: oklch(0.96 0.005 250);
+  --muted: oklch(0.31 0.024 250);
+  --muted-foreground: oklch(0.72 0.02 250);
+  --accent: oklch(0.72 0.13 220);
+  --accent-foreground: oklch(0.17 0.02 250);
+  --destructive: oklch(0.68 0.18 20);
+  --destructive-foreground: oklch(0.15 0.02 250);
+  --border: oklch(1 0 0 / 0.1);
+  --input: oklch(1 0 0 / 0.16);
+  --ring: oklch(0.72 0.13 220);
+  --healthy: oklch(0.7 0.11 160);
+  --warn: oklch(0.78 0.13 75);
+  --expiring: oklch(0.72 0.16 38);
+  --expired: oklch(0.68 0.18 20);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
+
+@keyframes vault-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes vault-sweep {
+  from {
+    transform: translate(-30%, -18%) rotate(10deg) scale(1.15);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes vault-scan {
+  0% {
+    transform: translateY(-10%);
+  }
+  100% {
+    transform: translateY(560%);
+  }
+}
+
+@keyframes vault-sheet {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes vault-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@utility rise {
+  animation: vault-rise 0.5s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@utility sweep {
+  animation: vault-sweep 1s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@utility sheet-in {
+  animation: vault-sheet 0.34s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@utility scan-line {
+  animation: vault-scan 1.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+@utility glass {
+  background-color: color-mix(in oklab, var(--color-surface) 70%, transparent);
+  backdrop-filter: blur(20px) saturate(140%);
+}
+
+@utility glass-strong {
+  background-color: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  backdrop-filter: blur(24px) saturate(150%);
+}
+
+@utility skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: color-mix(in oklab, var(--color-foreground) 8%, transparent);
+}
+
+@utility skeleton-sheen {
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--color-surface) 60%, transparent),
+    transparent
+  );
+  animation: vault-shimmer 1.6s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
