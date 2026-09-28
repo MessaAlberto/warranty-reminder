@@ -17,7 +17,10 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as AuthDeniedRouteImport } from './routes/auth.denied'
 import { Route as AuthStartRouteImport } from './routes/auth.start'
+import { Route as DriveSetupRouteImport } from './routes/drive.setup'
 import { Route as PurchaseIdRouteImport } from './routes/purchase.$id'
+import { Route as AuthDriveCallbackRouteImport } from './routes/auth.drive.callback'
+import { Route as AuthDriveStartRouteImport } from './routes/auth.drive.start'
 import { Route as AuthGoogleCallbackRouteImport } from './routes/auth.google.callback'
 
 const IndexRoute = IndexRouteImport.update({
@@ -60,9 +63,24 @@ const AuthStartRoute = AuthStartRouteImport.update({
   path: '/auth/start',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DriveSetupRoute = DriveSetupRouteImport.update({
+  id: '/drive/setup',
+  path: '/drive/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PurchaseIdRoute = PurchaseIdRouteImport.update({
   id: '/purchase/$id',
   path: '/purchase/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthDriveCallbackRoute = AuthDriveCallbackRouteImport.update({
+  id: '/auth/drive/callback',
+  path: '/auth/drive/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthDriveStartRoute = AuthDriveStartRouteImport.update({
+  id: '/auth/drive/start',
+  path: '/auth/drive/start',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthGoogleCallbackRoute = AuthGoogleCallbackRouteImport.update({
@@ -80,7 +98,10 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/auth/denied': typeof AuthDeniedRoute
   '/auth/start': typeof AuthStartRoute
+  '/drive/setup': typeof DriveSetupRoute
   '/purchase/$id': typeof PurchaseIdRoute
+  '/auth/drive/callback': typeof AuthDriveCallbackRoute
+  '/auth/drive/start': typeof AuthDriveStartRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
 }
 export interface FileRoutesByTo {
@@ -92,7 +113,10 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/auth/denied': typeof AuthDeniedRoute
   '/auth/start': typeof AuthStartRoute
+  '/drive/setup': typeof DriveSetupRoute
   '/purchase/$id': typeof PurchaseIdRoute
+  '/auth/drive/callback': typeof AuthDriveCallbackRoute
+  '/auth/drive/start': typeof AuthDriveStartRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
 }
 export interface FileRoutesById {
@@ -105,7 +129,10 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/auth/denied': typeof AuthDeniedRoute
   '/auth/start': typeof AuthStartRoute
+  '/drive/setup': typeof DriveSetupRoute
   '/purchase/$id': typeof PurchaseIdRoute
+  '/auth/drive/callback': typeof AuthDriveCallbackRoute
+  '/auth/drive/start': typeof AuthDriveStartRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
 }
 export interface FileRouteTypes {
@@ -119,7 +146,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/auth/denied'
     | '/auth/start'
+    | '/drive/setup'
     | '/purchase/$id'
+    | '/auth/drive/callback'
+    | '/auth/drive/start'
     | '/auth/google/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -131,7 +161,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/auth/denied'
     | '/auth/start'
+    | '/drive/setup'
     | '/purchase/$id'
+    | '/auth/drive/callback'
+    | '/auth/drive/start'
     | '/auth/google/callback'
   id:
     | '__root__'
@@ -143,7 +176,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/auth/denied'
     | '/auth/start'
+    | '/drive/setup'
     | '/purchase/$id'
+    | '/auth/drive/callback'
+    | '/auth/drive/start'
     | '/auth/google/callback'
   fileRoutesById: FileRoutesById
 }
@@ -156,7 +192,10 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   AuthDeniedRoute: typeof AuthDeniedRoute
   AuthStartRoute: typeof AuthStartRoute
+  DriveSetupRoute: typeof DriveSetupRoute
   PurchaseIdRoute: typeof PurchaseIdRoute
+  AuthDriveCallbackRoute: typeof AuthDriveCallbackRoute
+  AuthDriveStartRoute: typeof AuthDriveStartRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
 }
 
@@ -218,11 +257,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthStartRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/drive/setup': {
+      id: '/drive/setup'
+      path: '/drive/setup'
+      fullPath: '/drive/setup'
+      preLoaderRoute: typeof DriveSetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/purchase/$id': {
       id: '/purchase/$id'
       path: '/purchase/$id'
       fullPath: '/purchase/$id'
       preLoaderRoute: typeof PurchaseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/drive/callback': {
+      id: '/auth/drive/callback'
+      path: '/auth/drive/callback'
+      fullPath: '/auth/drive/callback'
+      preLoaderRoute: typeof AuthDriveCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/drive/start': {
+      id: '/auth/drive/start'
+      path: '/auth/drive/start'
+      fullPath: '/auth/drive/start'
+      preLoaderRoute: typeof AuthDriveStartRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/google/callback': {
@@ -244,7 +304,10 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   AuthDeniedRoute: AuthDeniedRoute,
   AuthStartRoute: AuthStartRoute,
+  DriveSetupRoute: DriveSetupRoute,
   PurchaseIdRoute: PurchaseIdRoute,
+  AuthDriveCallbackRoute: AuthDriveCallbackRoute,
+  AuthDriveStartRoute: AuthDriveStartRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
 }
 export const routeTree = rootRouteImport
