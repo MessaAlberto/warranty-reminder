@@ -8,12 +8,17 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     tanstackStart({ server: { entry: "server" } }),
-    nitro({ preset: "node-server" }),
+    nitro(),
     react(),
   ],
   css: { transformer: "lightningcss" },
   resolve: {
     tsconfigPaths: true,
-    dedupe: ["react", "react-dom", "@tanstack/react-query", "@tanstack/query-core"],
+    dedupe: [
+      "react",
+      "react-dom",
+      "@tanstack/react-query",
+      "@tanstack/query-core",
+    ],
   },
 });
