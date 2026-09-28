@@ -27,12 +27,12 @@ export const Route = createFileRoute("/search")({
       { title: "Cerca — Warranty Vault" },
       {
         name: "description",
-        content: "Cerca un acquisto per prodotto, modello, negozio o data.",
+        content: "Cerca un acquisto per prodotto, negozio o data.",
       },
       { property: "og:title", content: "Cerca — Warranty Vault" },
       {
         property: "og:description",
-        content: "Cerca un acquisto per prodotto, modello, negozio o data.",
+        content: "Cerca un acquisto per prodotto, negozio o data.",
       },
     ],
   }),
@@ -50,7 +50,7 @@ function SearchPage() {
       const haystack = [
         r.store,
         formatShortDate(r.purchaseDate),
-        ...r.products.flatMap((p) => [p.name, p.model ?? ""]),
+        ...r.products.map((p) => p.name),
       ]
         .join(" ")
         .toLowerCase();
@@ -88,7 +88,7 @@ function SearchPage() {
           <EmptyState
             icon={SearchX}
             title="Nessun risultato"
-            description="Prova con il nome del prodotto, il modello o il negozio dove hai acquistato."
+            description="Prova con il nome del prodotto o il negozio dove hai acquistato."
           />
         ) : (
           <>

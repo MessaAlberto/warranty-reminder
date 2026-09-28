@@ -3,11 +3,18 @@ import type { Product, Receipt, WarrantyStatusKey } from "./vault-types";
 const DAY = 1000 * 60 * 60 * 24;
 
 export function addMonths(iso: string, months: number): string {
-  const d = new Date(iso);
-  const day = d.getDate();
-  d.setMonth(d.getMonth() + months);
-  if (d.getDate() < day) d.setDate(0);
-  return d.toISOString().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return "";
+
+  const [year, month, day] = iso.split("-").map(Number);
+  if (!year || !month || !day) return "";
+
+  const target = new Date(Date.UTC(year, month - 1 + months, 1));
+  const lastDay = new Date(
+    Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+
+  target.setUTCDate(Math.min(day, lastDay));
+  return target.toISOString().slice(0, 10);
 }
 
 export function daysLeft(expiration: string, now = new Date()): number {
@@ -88,8 +95,14 @@ const euro = new Intl.NumberFormat("it-IT", {
   currency: "EUR",
 });
 
-export const formatDate = (iso: string) => dateFmt.format(new Date(iso));
-export const formatShortDate = (iso: string) => shortFmt.format(new Date(iso));
+export const formatDate = (iso: string) => {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? "—" : dateFmt.format(date);
+};
+export const formatShortDate = (iso: string) => {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? "—" : shortFmt.format(date);
+};
 export const formatPrice = (n: number) => euro.format(n);
 
 export function receiptStatus(receipt: Receipt, now = new Date()): WarrantyStatusKey {

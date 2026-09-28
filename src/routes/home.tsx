@@ -19,13 +19,13 @@ export const Route = createFileRoute("/home")({
       {
         name: "description",
         content:
-          "Tutte le garanzie attive, quelle in scadenza e il valore degli acquisti protetti.",
+          "Tutte le garanzie attive e quelle in scadenza.",
       },
       { property: "og:title", content: "Le tue garanzie — Warranty Vault" },
       {
         property: "og:description",
         content:
-          "Tutte le garanzie attive, quelle in scadenza e il valore degli acquisti protetti.",
+          "Tutte le garanzie attive e quelle in scadenza.",
       },
     ],
   }),
@@ -42,8 +42,7 @@ function HomePage() {
       const d = daysLeft(p.warrantyExpiration);
       return d > 0 && d <= 183;
     });
-    const total = active.reduce((s, p) => s + p.price, 0);
-    return { active: active.length, soon: soon.length, total };
+    return { active: active.length, soon: soon.length };
   }, [receipts]);
 
   const sorted = useMemo(

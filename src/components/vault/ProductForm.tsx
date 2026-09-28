@@ -76,24 +76,29 @@ export function ProductForm({
             )}
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Modello">
-              {(id) => (
-                <TextInput
-                  id={id}
-                  value={product.model ?? ""}
-                  onChange={(e) => set({ model: e.target.value })}
-                />
-              )}
-            </Field>
             <Field label="Prezzo (€)">
               {(id) => (
                 <TextInput
                   id={id}
                   type="number"
                   inputMode="decimal"
+                  min="0"
                   step="0.01"
                   value={product.price}
-                  onChange={(e) => set({ price: Number(e.target.value) })}
+                  onChange={(e) => set({ price: Math.max(0, Number(e.target.value) || 0) })}
+                />
+              )}
+            </Field>
+            <Field label="Quantità">
+              {(id) => (
+                <TextInput
+                  id={id}
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  step="1"
+                  value={product.quantity}
+                  onChange={(e) => set({ quantity: Math.max(1, Number(e.target.value) || 1) })}
                 />
               )}
             </Field>

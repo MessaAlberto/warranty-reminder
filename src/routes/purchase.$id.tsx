@@ -1,21 +1,25 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Archive, FileText, Loader2, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/vault/AppShell";
+import { useCriticalOperation } from "@/components/vault/AsyncOperationProvider";
 import { ConfirmDialog } from "@/components/vault/ConfirmDialog";
 import { NoticeBanner } from "@/components/vault/NoticeBanner";
 import { PageHeader } from "@/components/vault/PageHeader";
 import { ProductForm } from "@/components/vault/ProductForm";
+import { ReceiptUploader } from "@/components/vault/ReceiptUploader";
 import { ReceiptViewer } from "@/components/vault/ReceiptViewer";
 import { SkeletonDetail, SkeletonImage } from "@/components/vault/Skeletons";
 import { WarrantyProgress } from "@/components/vault/WarrantyProgress";
 import { WarrantyStatusBadge } from "@/components/vault/WarrantyStatusBadge";
 import { Field, TextInput, VaultButton } from "@/components/vault/controls";
-import { mockReceiptService } from "@/lib/mock-services";
+import { moveReceiptToTrash, getReceipt, updateReceiptWithImages } from "@/drive/receipt-functions";
 import { requireAuthenticatedRoute } from "@/auth/route-guards";
 import { useVault } from "@/lib/vault-store";
-import type { Receipt, ReceiptImage } from "@/lib/vault-types";
+import { receiptImageFormData } from "@/lib/receipt-image-form-data";
+import { releaseLocalReceiptImage } from "@/lib/receipt-image-preprocessing";
+import type { PendingReceiptImage, Receipt } from "@/lib/vault-types";
 import { CATEGORY_LABEL } from "@/lib/vault-types";
 import {
   addMonths,
@@ -50,16 +54,68 @@ function PurchasePage() {
   const { id } = useParams({ from: "/purchase/$id" });
   const navigate = useNavigate();
   const { receipts, loading, updateReceipt, removeReceipt } = useVault();
+  const { busy, runCritical } = useCriticalOperation();
   const receipt = receipts.find((r) => r.id === id);
 
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState<Receipt | null>(null);
+  const [draft, setDraft] = useState<
+    (Omit<Receipt, "images"> & { images: PendingReceiptImage[] }) | null
+  >(null);
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [loadingReceipt, setLoadingReceipt] = useState(false);
-  const [images, setImages] = useState<ReceiptImage[] | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [loadingMetadata, setLoadingMetadata] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageRequested, setImageRequested] = useState(false);
+  const [loadedImageIds, setLoadedImageIds] = useState<Set<string>>(() => new Set());
+  const [detailedReceipt, setDetailedReceipt] = useState<Receipt | null>(null);
+  const [showImages, setShowImages] = useState(false);
   const [viewer, setViewer] = useState(false);
   const [kept, setKept] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setDetailedReceipt(null);
+    setShowImages(false);
+    setImageRequested(false);
+    setImageLoading(false);
+    setLoadedImageIds(new Set());
+    setViewer(false);
+    setEditing(false);
+    setLoadingMetadata(true);
+    void getReceipt({ data: { id } })
+      .then((result) => {
+        if (!cancelled && result) setDetailedReceipt(result);
+      })
+      .catch(() => {
+        if (!cancelled) toast.error("Impossibile caricare i dati dello scontrino");
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingMetadata(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    if (!imageRequested || loadingMetadata) return;
+    if (!detailedReceipt) {
+      setImageRequested(false);
+      setImageLoading(false);
+      toast.error("Impossibile preparare l'immagine dello scontrino. Riprova.");
+      return;
+    }
+    if (detailedReceipt.images.length === 0) {
+      setImageRequested(false);
+      setImageLoading(false);
+      toast.info("L'immagine dello scontrino non è ancora archiviata");
+      return;
+    }
+    setLoadedImageIds(new Set());
+    setShowImages(true);
+    setImageLoading(true);
+  }, [detailedReceipt, imageRequested, loadingMetadata]);
 
   if (loading) {
     return (
@@ -85,44 +141,84 @@ function PurchasePage() {
     );
   }
 
-  const product = receipt.products[0]!;
+  const detail = detailedReceipt?.id === id ? detailedReceipt : receipt;
+  const product = detail.products[0]!;
   const status = statusOf(product);
-  const current = draft ?? receipt;
+  const current = draft ?? detail;
 
-  const openReceipt = async () => {
-    setLoadingReceipt(true);
-    const files = await mockReceiptService.fetchOriginalImages(receipt);
-    setImages(files);
-    setLoadingReceipt(false);
+  const openReceipt = () => {
+    setImageRequested(true);
+    setImageLoading(true);
+  };
+
+  const completeImageLoad = (imageId: string) => {
+    setLoadedImageIds((current) => {
+      const next = new Set(current).add(imageId);
+      if (next.size === detail.images.length) setImageLoading(false);
+      return next;
+    });
+  };
+
+  const failImageLoad = () => {
+    setShowImages(false);
+    setImageRequested(false);
+    setImageLoading(false);
+    setLoadedImageIds(new Set());
+    toast.error("Impossibile caricare l'immagine dello scontrino. Riprova.");
   };
 
   const startEdit = () => {
-    setDraft(structuredClone(receipt));
+    if (loadingMetadata) return;
+    setDraft(structuredClone(detail));
     setEditing(true);
   };
 
   const saveEdit = async () => {
     if (!draft) return;
-    await mockReceiptService.saveReceipt(draft);
-    updateReceipt(draft);
-    setEditing(false);
-    setDraft(null);
-    toast.success("Modifiche salvate");
+    setSaving(true);
+    try {
+      await runCritical({ message: "Salvataggio e caricamento foto..." }, async () => {
+        const saved = await updateReceiptWithImages({
+          data: receiptImageFormData(draft),
+        });
+        updateReceipt(saved);
+        draft.images.filter((image) => image.file).forEach(releaseLocalReceiptImage);
+        setDetailedReceipt(saved);
+        setEditing(false);
+        setDraft(null);
+        toast.success("Modifiche salvate");
+      });
+    } catch (error) {
+      toast.error("Modifica non riuscita", {
+        description: error instanceof Error ? error.message : "Riprova.",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const doDelete = async () => {
     setDeleting(true);
-    await mockReceiptService.deleteReceipt(receipt.id);
-    removeReceipt(receipt.id);
-    setDeleting(false);
-    setConfirming(false);
-    toast.success("Acquisto eliminato");
-    navigate({ to: "/home" });
+    try {
+      await runCritical({ message: "Eliminazione..." }, async () => {
+        await moveReceiptToTrash({ data: { id: detail.id } });
+        removeReceipt(detail.id);
+        setConfirming(false);
+        toast.success("Acquisto spostato nell'archivio");
+        navigate({ to: "/home" });
+      });
+    } catch (error) {
+      toast.error("Spostamento non riuscito", {
+        description: error instanceof Error ? error.message : "Riprova.",
+      });
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
     <AppShell>
-      <PageHeader eyebrow={receipt.store} title={product.name} back="/home" />
+      <PageHeader eyebrow={detail.store} title={product.name} back="/home" />
 
       <div className="relative z-10 space-y-5 px-5 pb-32">
         {!editing ? (
@@ -142,7 +238,7 @@ function PurchasePage() {
                 <WarrantyStatusBadge status={status} />
               </div>
               <WarrantyProgress
-                value={progressOf(product, receipt.purchaseDate)}
+                value={progressOf(product, detail.purchaseDate)}
                 status={status}
                 label={`Garanzia di ${product.name}`}
               />
@@ -174,23 +270,21 @@ function PurchasePage() {
             ) : null}
 
             <div className="glass space-y-3 rounded-2xl p-5 ring-1 ring-border">
-              <Row label="Negozio" value={receipt.store} />
-              <Row label="Data acquisto" value={formatDate(receipt.purchaseDate)} />
-              <Row label="Totale scontrino" value={formatPrice(receipt.total)} />
-              {receipt.notes ? <Row label="Note" value={receipt.notes} /> : null}
+              <Row label="Negozio" value={detail.store} />
+              <Row label="Data acquisto" value={formatDate(detail.purchaseDate)} />
+              {detail.notes ? <Row label="Note" value={detail.notes} /> : null}
             </div>
 
             <div className="space-y-2">
               <h2 className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                 Prodotti sullo scontrino
               </h2>
-              {receipt.products.map((p) => (
+              {detail.products.map((p) => (
                 <div key={p.id} className="glass rounded-2xl p-4 ring-1 ring-border">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate font-display text-[15px] tracking-tight">{p.name}</p>
                       <p className="mt-0.5 text-[12px] text-muted-foreground">
-                        {p.model ? `${p.model} · ` : ""}
                         {CATEGORY_LABEL[p.category]} · {formatPrice(p.price)}
                       </p>
                     </div>
@@ -207,11 +301,24 @@ function PurchasePage() {
               <h2 className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                 Scontrino
               </h2>
-              <div className="glass rounded-2xl p-4 ring-1 ring-border">
-                {images ? (
+              <div className="relative glass rounded-2xl p-4 ring-1 ring-border">
+                {showImages ? (
                   <>
-                    <div className="grid grid-cols-3 gap-2">
-                      {images.map((img, i) => (
+                    {imageLoading ? (
+                      <div className="space-y-3" aria-busy="true">
+                        <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
+                          <Loader2 className="size-4 animate-spin" aria-hidden /> Caricamento
+                          scontrino…
+                        </p>
+                        <SkeletonImage />
+                      </div>
+                    ) : null}
+                    <div
+                      className={`grid grid-cols-3 gap-2 ${
+                        imageLoading ? "pointer-events-none absolute opacity-0" : ""
+                      }`}
+                    >
+                      {detail.images.map((img, i) => (
                         <button
                           key={img.id}
                           onClick={() => setViewer(true)}
@@ -225,6 +332,8 @@ function PurchasePage() {
                             width={768}
                             height={1536}
                             className="h-28 w-full object-cover object-top"
+                            onLoad={() => completeImageLoad(img.id)}
+                            onError={failImageLoad}
                           />
                           <span className="sr-only">Pagina {i + 1}</span>
                         </button>
@@ -238,7 +347,7 @@ function PurchasePage() {
                       Apri a schermo intero
                     </VaultButton>
                   </>
-                ) : loadingReceipt ? (
+                ) : imageLoading ? (
                   <div className="space-y-3">
                     <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
                       <Loader2 className="size-4 animate-spin" aria-hidden /> Caricamento scontrino…
@@ -250,7 +359,12 @@ function PurchasePage() {
                     <p className="text-[13px] text-muted-foreground">
                       Le foto restano archiviate e vengono scaricate solo quando le apri.
                     </p>
-                    <VaultButton variant="accent" className="mt-3 w-full" onClick={openReceipt}>
+                    <VaultButton
+                      variant="accent"
+                      className="mt-3 w-full"
+                      onClick={openReceipt}
+                      disabled={busy}
+                    >
                       <FileText className="size-4" aria-hidden /> Visualizza scontrino originale
                     </VaultButton>
                   </>
@@ -259,7 +373,7 @@ function PurchasePage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <VaultButton variant="outline" onClick={startEdit}>
+              <VaultButton variant="outline" onClick={startEdit} disabled={loadingMetadata || busy}>
                 <Pencil className="size-4" aria-hidden /> Modifica acquisto
               </VaultButton>
               <VaultButton
@@ -283,38 +397,25 @@ function PurchasePage() {
                   />
                 )}
               </Field>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Data acquisto">
-                  {(fid) => (
-                    <TextInput
-                      id={fid}
-                      type="date"
-                      value={current.purchaseDate.slice(0, 10)}
-                      onChange={(e) =>
-                        setDraft({
-                          ...current,
-                          purchaseDate: e.target.value,
-                          products: current.products.map((p) => ({
-                            ...p,
-                            warrantyExpiration: addMonths(e.target.value, p.warrantyMonths || 24),
-                          })),
-                        })
-                      }
-                    />
-                  )}
-                </Field>
-                <Field label="Totale (€)">
-                  {(fid) => (
-                    <TextInput
-                      id={fid}
-                      type="number"
-                      step="0.01"
-                      value={current.total}
-                      onChange={(e) => setDraft({ ...current, total: Number(e.target.value) })}
-                    />
-                  )}
-                </Field>
-              </div>
+              <Field label="Data acquisto">
+                {(fid) => (
+                  <TextInput
+                    id={fid}
+                    type="date"
+                    value={current.purchaseDate.slice(0, 10)}
+                    onChange={(e) =>
+                      setDraft({
+                        ...current,
+                        purchaseDate: e.target.value,
+                        products: current.products.map((p) => ({
+                          ...p,
+                          warrantyExpiration: addMonths(e.target.value, p.warrantyMonths || 24),
+                        })),
+                      })
+                    }
+                  />
+                )}
+              </Field>
               <Field label="Note">
                 {(fid) => (
                   <TextInput
@@ -341,16 +442,35 @@ function PurchasePage() {
               />
             ))}
 
+            <div className="space-y-2">
+              <h2 className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Foto dello scontrino
+              </h2>
+              <ReceiptUploader
+                images={current.images}
+                onChange={(images) => setDraft({ ...current, images })}
+                disabled={saving || busy}
+              />
+            </div>
+
             <div className="flex flex-col gap-2">
-              <VaultButton variant="accent" onClick={saveEdit}>
-                Salva modifiche
+              <VaultButton variant="accent" onClick={saveEdit} disabled={saving || busy}>
+                {saving ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" aria-hidden /> Salvataggio…
+                  </>
+                ) : (
+                  "Salva modifiche"
+                )}
               </VaultButton>
               <VaultButton
                 variant="ghost"
                 onClick={() => {
+                  draft?.images.filter((image) => image.file).forEach(releaseLocalReceiptImage);
                   setEditing(false);
                   setDraft(null);
                 }}
+                disabled={saving || busy}
               >
                 Annulla
               </VaultButton>
@@ -369,7 +489,9 @@ function PurchasePage() {
         onClose={() => setConfirming(false)}
       />
 
-      {viewer && images ? <ReceiptViewer images={images} onClose={() => setViewer(false)} /> : null}
+      {viewer && detail.images.length ? (
+        <ReceiptViewer images={detail.images} onClose={() => setViewer(false)} />
+      ) : null}
     </AppShell>
   );
 }

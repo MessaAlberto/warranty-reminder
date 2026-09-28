@@ -12,8 +12,10 @@ import { type ReactNode } from "react";
 import { Toaster } from "sonner";
 
 import { getCurrentUserServerFn } from "../auth/auth-functions";
+import { listReceipts } from "../drive/receipt-functions";
 import appCss from "../styles.css?url";
 import { VaultProvider } from "../lib/vault-store";
+import { AsyncOperationProvider } from "../components/vault/AsyncOperationProvider";
 
 function NotFoundComponent() {
   return (
@@ -73,7 +75,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  loader: async () => await getCurrentUserServerFn(),
+  loader: async () => {
+    const user = await getCurrentUserServerFn();
+    return { user, receipts: user ? await listReceipts() : [] };
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -131,14 +136,16 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const user = Route.useLoaderData();
+  const { user, receipts } = Route.useLoaderData();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <VaultProvider user={user}>
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
-        <Toaster position="top-center" />
+      <VaultProvider user={user} initialReceipts={receipts}>
+        <AsyncOperationProvider>
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+          <Toaster position="top-center" />
+        </AsyncOperationProvider>
       </VaultProvider>
     </QueryClientProvider>
   );

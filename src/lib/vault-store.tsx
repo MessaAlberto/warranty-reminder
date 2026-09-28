@@ -7,7 +7,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { MOCK_RECEIPTS } from "./mock-data";
 import type { AuthenticatedUser } from "../auth/auth-types";
 import type { Receipt } from "./vault-types";
 
@@ -43,11 +42,13 @@ const DEFAULT_PREFS: Preferences = {
 export function VaultProvider({
   children,
   user,
+  initialReceipts,
 }: {
   children: ReactNode;
   user: AuthenticatedUser | undefined;
+  initialReceipts: Receipt[];
 }) {
-  const [receipts, setReceipts] = useState<Receipt[]>(MOCK_RECEIPTS);
+  const [receipts, setReceipts] = useState<Receipt[]>(initialReceipts);
   const [loading, setLoading] = useState(true);
   const [prefs, setPrefsState] = useState<Preferences>(DEFAULT_PREFS);
 

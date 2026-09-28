@@ -2,35 +2,33 @@ import { useEffect, useState } from "react";
 import { Check, Loader2 } from "lucide-react";
 
 const STEPS = [
-  "Preparazione immagine",
+  "Preparazione immagini",
   "Lettura scontrino",
-  "Ricerca dati d'acquisto",
-  "Rilevamento prodotti",
-  "Controllo garanzia",
-];
+  "Interpretazione dati d'acquisto",
+  "Preparazione prodotti",
+] as const;
+
+const STEP_PROGRESS = [18, 48, 76, 92] as const;
 
 export function ReceiptAnalysisProgress({
   imageUrl,
-  onDone,
+  imageCount,
 }: {
   imageUrl?: string | undefined;
-  onDone: () => void;
+  imageCount: number;
 }) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    if (step >= STEPS.length) {
-      const t = setTimeout(onDone, 500);
-      return () => clearTimeout(t);
-    }
-    const t = setTimeout(() => setStep((s) => s + 1), 900);
-    return () => clearTimeout(t);
-  }, [step, onDone]);
+    if (step >= STEPS.length - 1) return;
+    const timeout = setTimeout(() => setStep((current) => Math.min(current + 1, STEPS.length - 1)), 1100);
+    return () => clearTimeout(timeout);
+  }, [step]);
 
-  const pct = Math.round((step / STEPS.length) * 100);
+  const pct = STEP_PROGRESS[step] ?? 92;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" aria-busy="true">
       <div className="glass relative overflow-hidden rounded-2xl ring-1 ring-border">
         <div className="relative h-56 w-full overflow-hidden">
           {imageUrl ? (
@@ -47,11 +45,11 @@ export function ReceiptAnalysisProgress({
           <div className="absolute inset-0 ring-1 ring-inset ring-accent/30" />
         </div>
         <div className="space-y-2 p-4">
-          {[0, 1, 2].map((i) => (
+          {[0, 1, 2].map((index) => (
             <span
-              key={i}
+              key={index}
               className="skeleton block h-2 rounded-full"
-              style={{ width: `${70 - i * 18}%`, opacity: step > i ? 0.25 : 1 }}
+              style={{ width: `${70 - index * 18}%`, opacity: step > index ? 0.25 : 1 }}
             >
               <span className="skeleton-sheen" />
             </span>
@@ -61,7 +59,12 @@ export function ReceiptAnalysisProgress({
 
       <div>
         <div className="flex items-baseline justify-between">
-          <p className="font-display text-lg tracking-tight">Analisi dello scontrino</p>
+          <div>
+            <p className="font-display text-lg tracking-tight">Analisi dello scontrino</p>
+            <p className="mt-0.5 text-[12px] text-muted-foreground">
+              {imageCount === 1 ? "1 foto" : `${imageCount} foto`} · OCR + riconoscimento dati
+            </p>
+          </div>
           <span className="font-mono text-[11px] text-muted-foreground">{pct}%</span>
         </div>
         <div className="mt-2 h-1 overflow-hidden rounded-full bg-foreground/8">
@@ -73,9 +76,9 @@ export function ReceiptAnalysisProgress({
       </div>
 
       <ul className="space-y-2" aria-live="polite">
-        {STEPS.map((label, i) => {
-          const done = step > i;
-          const active = step === i;
+        {STEPS.map((label, index) => {
+          const done = step > index;
+          const active = step === index;
           return (
             <li
               key={label}

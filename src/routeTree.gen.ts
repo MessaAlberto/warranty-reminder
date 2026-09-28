@@ -15,6 +15,7 @@ import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ApiOcrTestRouteImport } from './routes/api.ocr-test'
 import { Route as AuthDeniedRouteImport } from './routes/auth.denied'
 import { Route as AuthStartRouteImport } from './routes/auth.start'
 import { Route as DriveSetupRouteImport } from './routes/drive.setup'
@@ -22,6 +23,7 @@ import { Route as PurchaseIdRouteImport } from './routes/purchase.$id'
 import { Route as AuthDriveCallbackRouteImport } from './routes/auth.drive.callback'
 import { Route as AuthDriveStartRouteImport } from './routes/auth.drive.start'
 import { Route as AuthGoogleCallbackRouteImport } from './routes/auth.google.callback'
+import { Route as ApiReceiptsReceiptIdImagesAttachmentIdRouteImport } from './routes/api.receipts.$receiptId.images.$attachmentId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -51,6 +53,11 @@ const SearchRoute = SearchRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOcrTestRoute = ApiOcrTestRouteImport.update({
+  id: '/api/ocr-test',
+  path: '/api/ocr-test',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthDeniedRoute = AuthDeniedRouteImport.update({
@@ -88,6 +95,12 @@ const AuthGoogleCallbackRoute = AuthGoogleCallbackRouteImport.update({
   path: '/auth/google/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiReceiptsReceiptIdImagesAttachmentIdRoute =
+  ApiReceiptsReceiptIdImagesAttachmentIdRouteImport.update({
+    id: '/api/receipts/$receiptId/images/$attachmentId',
+    path: '/api/receipts/$receiptId/images/$attachmentId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -96,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof HomeRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/api/ocr-test': typeof ApiOcrTestRoute
   '/auth/denied': typeof AuthDeniedRoute
   '/auth/start': typeof AuthStartRoute
   '/drive/setup': typeof DriveSetupRoute
@@ -103,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/auth/drive/callback': typeof AuthDriveCallbackRoute
   '/auth/drive/start': typeof AuthDriveStartRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
+  '/api/receipts/$receiptId/images/$attachmentId': typeof ApiReceiptsReceiptIdImagesAttachmentIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -111,6 +126,7 @@ export interface FileRoutesByTo {
   '/home': typeof HomeRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/api/ocr-test': typeof ApiOcrTestRoute
   '/auth/denied': typeof AuthDeniedRoute
   '/auth/start': typeof AuthStartRoute
   '/drive/setup': typeof DriveSetupRoute
@@ -118,6 +134,7 @@ export interface FileRoutesByTo {
   '/auth/drive/callback': typeof AuthDriveCallbackRoute
   '/auth/drive/start': typeof AuthDriveStartRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
+  '/api/receipts/$receiptId/images/$attachmentId': typeof ApiReceiptsReceiptIdImagesAttachmentIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -127,6 +144,7 @@ export interface FileRoutesById {
   '/home': typeof HomeRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/api/ocr-test': typeof ApiOcrTestRoute
   '/auth/denied': typeof AuthDeniedRoute
   '/auth/start': typeof AuthStartRoute
   '/drive/setup': typeof DriveSetupRoute
@@ -134,6 +152,7 @@ export interface FileRoutesById {
   '/auth/drive/callback': typeof AuthDriveCallbackRoute
   '/auth/drive/start': typeof AuthDriveStartRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
+  '/api/receipts/$receiptId/images/$attachmentId': typeof ApiReceiptsReceiptIdImagesAttachmentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -144,6 +163,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/search'
     | '/settings'
+    | '/api/ocr-test'
     | '/auth/denied'
     | '/auth/start'
     | '/drive/setup'
@@ -151,6 +171,7 @@ export interface FileRouteTypes {
     | '/auth/drive/callback'
     | '/auth/drive/start'
     | '/auth/google/callback'
+    | '/api/receipts/$receiptId/images/$attachmentId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -159,6 +180,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/search'
     | '/settings'
+    | '/api/ocr-test'
     | '/auth/denied'
     | '/auth/start'
     | '/drive/setup'
@@ -166,6 +188,7 @@ export interface FileRouteTypes {
     | '/auth/drive/callback'
     | '/auth/drive/start'
     | '/auth/google/callback'
+    | '/api/receipts/$receiptId/images/$attachmentId'
   id:
     | '__root__'
     | '/'
@@ -174,6 +197,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/search'
     | '/settings'
+    | '/api/ocr-test'
     | '/auth/denied'
     | '/auth/start'
     | '/drive/setup'
@@ -181,6 +205,7 @@ export interface FileRouteTypes {
     | '/auth/drive/callback'
     | '/auth/drive/start'
     | '/auth/google/callback'
+    | '/api/receipts/$receiptId/images/$attachmentId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -190,6 +215,7 @@ export interface RootRouteChildren {
   HomeRoute: typeof HomeRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
+  ApiOcrTestRoute: typeof ApiOcrTestRoute
   AuthDeniedRoute: typeof AuthDeniedRoute
   AuthStartRoute: typeof AuthStartRoute
   DriveSetupRoute: typeof DriveSetupRoute
@@ -197,6 +223,7 @@ export interface RootRouteChildren {
   AuthDriveCallbackRoute: typeof AuthDriveCallbackRoute
   AuthDriveStartRoute: typeof AuthDriveStartRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
+  ApiReceiptsReceiptIdImagesAttachmentIdRoute: typeof ApiReceiptsReceiptIdImagesAttachmentIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -241,6 +268,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ocr-test': {
+      id: '/api/ocr-test'
+      path: '/api/ocr-test'
+      fullPath: '/api/ocr-test'
+      preLoaderRoute: typeof ApiOcrTestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/denied': {
@@ -292,6 +326,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthGoogleCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/receipts/$receiptId/images/$attachmentId': {
+      id: '/api/receipts/$receiptId/images/$attachmentId'
+      path: '/api/receipts/$receiptId/images/$attachmentId'
+      fullPath: '/api/receipts/$receiptId/images/$attachmentId'
+      preLoaderRoute: typeof ApiReceiptsReceiptIdImagesAttachmentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -302,6 +343,7 @@ const rootRouteChildren: RootRouteChildren = {
   HomeRoute: HomeRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
+  ApiOcrTestRoute: ApiOcrTestRoute,
   AuthDeniedRoute: AuthDeniedRoute,
   AuthStartRoute: AuthStartRoute,
   DriveSetupRoute: DriveSetupRoute,
@@ -309,6 +351,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthDriveCallbackRoute: AuthDriveCallbackRoute,
   AuthDriveStartRoute: AuthDriveStartRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
+  ApiReceiptsReceiptIdImagesAttachmentIdRoute:
+    ApiReceiptsReceiptIdImagesAttachmentIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

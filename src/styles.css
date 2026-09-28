@@ -140,6 +140,39 @@
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
   }
+
+  button:not(:disabled),
+  a[href],
+  select,
+  input[type="checkbox"],
+  input[type="radio"] {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  button:not(:disabled) {
+    transition:
+      transform 150ms ease,
+      filter 150ms ease,
+      opacity 150ms ease;
+  }
+
+  button:not(:disabled):active {
+    transform: scale(0.98);
+  }
+
+  @media (hover: hover) {
+    button:not(:disabled):hover {
+      filter: brightness(0.98);
+    }
+
+    a[href]:hover {
+      opacity: 0.86;
+    }
+  }
 }
 
 @keyframes vault-rise {

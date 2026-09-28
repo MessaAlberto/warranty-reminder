@@ -5,8 +5,8 @@ export type WarrantyStatusKey = "healthy" | "warn" | "expiring" | "expired";
 export interface Product {
   id: string;
   name: string;
-  model?: string | undefined;
   price: number;
+  quantity: number;
   warrantyMonths: number;
   /** ISO date string */
   warrantyExpiration: string;
@@ -15,9 +15,22 @@ export interface Product {
 
 export interface ReceiptImage {
   id: string;
-  /** URL of the mock scan */
+  /** A local object URL or an authenticated application image endpoint. */
   url: string;
   label: string;
+  driveFileId?: string | undefined;
+  fileName?: string | undefined;
+  mimeType?: string | undefined;
+  sizeBytes?: number | undefined;
+  width?: number | undefined;
+  height?: number | undefined;
+  sortOrder?: number | undefined;
+  createdAt?: string | undefined;
+}
+
+/** Client-only normalized image awaiting persistence. */
+export interface PendingReceiptImage extends ReceiptImage {
+  file?: File | undefined;
 }
 
 export interface Receipt {
@@ -25,7 +38,6 @@ export interface Receipt {
   store: string;
   /** ISO date string */
   purchaseDate: string;
-  total: number;
   notes?: string | undefined;
   images: ReceiptImage[];
   products: Product[];
