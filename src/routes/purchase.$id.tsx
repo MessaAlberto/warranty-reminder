@@ -13,6 +13,7 @@ import { WarrantyProgress } from "@/components/vault/WarrantyProgress";
 import { WarrantyStatusBadge } from "@/components/vault/WarrantyStatusBadge";
 import { Field, TextInput, VaultButton } from "@/components/vault/controls";
 import { mockReceiptService } from "@/lib/mock-services";
+import { requireAuthenticatedRoute } from "@/auth/route-guards";
 import { useVault } from "@/lib/vault-store";
 import type { Receipt, ReceiptImage } from "@/lib/vault-types";
 import { CATEGORY_LABEL } from "@/lib/vault-types";
@@ -27,6 +28,7 @@ import {
 } from "@/lib/warranty";
 
 export const Route = createFileRoute("/purchase/$id")({
+  beforeLoad: requireAuthenticatedRoute,
   head: () => ({
     meta: [
       { title: "Dettaglio acquisto — Warranty Vault" },

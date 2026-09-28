@@ -9,6 +9,7 @@ import { SearchBar } from "@/components/vault/SearchBar";
 import { SkeletonList } from "@/components/vault/Skeletons";
 import { WarrantyCard } from "@/components/vault/WarrantyCard";
 import { useVault } from "@/lib/vault-store";
+import { requireAuthenticatedRoute } from "@/auth/route-guards";
 import { daysLeft, formatShortDate } from "@/lib/warranty";
 
 const FILTERS: readonly FilterOption[] = [
@@ -20,6 +21,7 @@ const FILTERS: readonly FilterOption[] = [
 ];
 
 export const Route = createFileRoute("/search")({
+  beforeLoad: requireAuthenticatedRoute,
   head: () => ({
     meta: [
       { title: "Cerca — Warranty Vault" },

@@ -11,11 +11,13 @@ import { ReceiptUploader } from "@/components/vault/ReceiptUploader";
 import { Field, TextInput, VaultButton } from "@/components/vault/controls";
 import { MOCK_ANALYSIS_RESULT } from "@/lib/mock-data";
 import { mockReceiptService } from "@/lib/mock-services";
+import { requireAuthenticatedRoute } from "@/auth/route-guards";
 import { useVault } from "@/lib/vault-store";
 import type { Product, Receipt, ReceiptImage } from "@/lib/vault-types";
 import { addMonths, formatDate, formatPrice } from "@/lib/warranty";
 
 export const Route = createFileRoute("/add")({
+  beforeLoad: requireAuthenticatedRoute,
   head: () => ({
     meta: [
       { title: "Aggiungi acquisto — Warranty Vault" },

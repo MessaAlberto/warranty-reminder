@@ -11,6 +11,7 @@ import { type ReactNode } from "react";
 
 import { Toaster } from "sonner";
 
+import { getCurrentUserServerFn } from "../auth/auth-functions";
 import appCss from "../styles.css?url";
 import { VaultProvider } from "../lib/vault-store";
 
@@ -72,6 +73,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  loader: async () => await getCurrentUserServerFn(),
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -129,10 +131,11 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const user = Route.useLoaderData();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <VaultProvider>
+      <VaultProvider user={user}>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
         <Toaster position="top-center" />

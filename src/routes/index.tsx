@@ -1,10 +1,12 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { Loader2, Lock, ShieldCheck } from "lucide-react";
-import { mockAuthService } from "@/lib/mock-services";
-import { useVault } from "@/lib/vault-store";
+import { getCurrentUserServerFn } from "@/auth/auth-functions";
 
 export const Route = createFileRoute("/")({
+  beforeLoad: async () => {
+    if (await getCurrentUserServerFn()) throw redirect({ to: "/home" });
+  },
   head: () => ({
     meta: [
       { title: "Warranty Vault — scontrini e garanzie di casa" },
@@ -25,15 +27,11 @@ export const Route = createFileRoute("/")({
 });
 
 function Welcome() {
-  const navigate = useNavigate();
-  const { signIn } = useVault();
   const [busy, setBusy] = useState(false);
 
-  const handle = async () => {
+  const handle = () => {
     setBusy(true);
-    await mockAuthService.signInWithGoogle();
-    signIn();
-    navigate({ to: "/home" });
+    window.location.assign("/auth/start");
   };
 
   return (

@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { MOCK_RECEIPTS } from "./mock-data";
+import type { AuthenticatedUser } from "../auth/auth-types";
 import type { Receipt } from "./vault-types";
 
 export type ThemeMode = "light" | "dark" | "system";
@@ -22,11 +23,8 @@ export interface Preferences {
 interface VaultContextValue {
   receipts: Receipt[];
   loading: boolean;
-  signedIn: boolean;
-  user: { name: string; email: string; initials: string };
+  user: AuthenticatedUser | undefined;
   prefs: Preferences;
-  signIn: () => void;
-  signOut: () => void;
   addReceipt: (receipt: Receipt) => void;
   updateReceipt: (receipt: Receipt) => void;
   removeReceipt: (id: string) => void;
@@ -42,10 +40,15 @@ const DEFAULT_PREFS: Preferences = {
   warningDays: 60,
 };
 
-export function VaultProvider({ children }: { children: ReactNode }) {
+export function VaultProvider({
+  children,
+  user,
+}: {
+  children: ReactNode;
+  user: AuthenticatedUser | undefined;
+}) {
   const [receipts, setReceipts] = useState<Receipt[]>(MOCK_RECEIPTS);
   const [loading, setLoading] = useState(true);
-  const [signedIn, setSignedIn] = useState(false);
   const [prefs, setPrefsState] = useState<Preferences>(DEFAULT_PREFS);
 
   useEffect(() => {
@@ -69,18 +72,15 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     () => ({
       receipts,
       loading,
-      signedIn,
-      user: { name: "Alberto", email: "alberto@example.com", initials: "AM" },
+      user,
       prefs,
-      signIn: () => setSignedIn(true),
-      signOut: () => setSignedIn(false),
       addReceipt: (receipt) => setReceipts((prev) => [receipt, ...prev]),
       updateReceipt: (receipt) =>
         setReceipts((prev) => prev.map((r) => (r.id === receipt.id ? receipt : r))),
       removeReceipt: (id) => setReceipts((prev) => prev.filter((r) => r.id !== id)),
       setPrefs: (next) => setPrefsState((prev) => ({ ...prev, ...next })),
     }),
-    [receipts, loading, signedIn, prefs],
+    [receipts, loading, user, prefs],
   );
 
   return <VaultContext.Provider value={value}>{children}</VaultContext.Provider>;

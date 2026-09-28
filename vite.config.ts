@@ -5,20 +5,10 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [
-    tailwindcss(),
-    tanstackStart({ server: { entry: "server" } }),
-    nitro(),
-    react(),
-  ],
+  plugins: [tailwindcss(), tanstackStart({ server: { entry: "server" } }), nitro(), react()],
   css: { transformer: "lightningcss" },
   resolve: {
     tsconfigPaths: true,
-    dedupe: [
-      "react",
-      "react-dom",
-      "@tanstack/react-query",
-      "@tanstack/query-core",
-    ],
+    dedupe: ["react", "react-dom", "@tanstack/react-query", "@tanstack/query-core"],
   },
 });

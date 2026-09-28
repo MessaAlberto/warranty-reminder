@@ -10,9 +10,11 @@ import { SkeletonList } from "@/components/vault/Skeletons";
 import { WarrantyCard } from "@/components/vault/WarrantyCard";
 import { VaultButton } from "@/components/vault/controls";
 import { useVault } from "@/lib/vault-store";
+import { requireAuthenticatedRoute } from "@/auth/route-guards";
 import { deletionText, receiptStatus } from "@/lib/warranty";
 
 export const Route = createFileRoute("/archive")({
+  beforeLoad: requireAuthenticatedRoute,
   head: () => ({
     meta: [
       { title: "Archivio — Warranty Vault" },

@@ -8,9 +8,11 @@ import { SkeletonList } from "@/components/vault/Skeletons";
 import { WarrantyCard } from "@/components/vault/WarrantyCard";
 import { VaultButton } from "@/components/vault/controls";
 import { useVault } from "@/lib/vault-store";
+import { requireAuthenticatedRoute } from "@/auth/route-guards";
 import { daysLeft, statusOf } from "@/lib/warranty";
 
 export const Route = createFileRoute("/home")({
+  beforeLoad: requireAuthenticatedRoute,
   head: () => ({
     meta: [
       { title: "Le tue garanzie — Warranty Vault" },
@@ -59,7 +61,7 @@ function HomePage() {
       <header className="rise relative z-10 flex items-start justify-between px-5 pt-6 pb-4">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-            Ciao, {user.name}
+            Ciao, {user?.name}
           </p>
           <h1 className="mt-1 font-display text-[28px] leading-none tracking-tight">
             Le tue garanzie
@@ -70,7 +72,7 @@ function HomePage() {
           aria-label="Impostazioni e profilo"
           className="grid size-10 place-items-center rounded-full bg-surface font-display text-[13px] font-bold ring-1 ring-border"
         >
-          {user.initials}
+          {user?.initials}
         </Link>
       </header>
 

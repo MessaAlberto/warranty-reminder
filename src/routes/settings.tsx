@@ -3,9 +3,12 @@ import { Users } from "lucide-react";
 import { AppShell } from "@/components/vault/AppShell";
 import { PageHeader } from "@/components/vault/PageHeader";
 import { VaultButton } from "@/components/vault/controls";
+import { logout } from "@/auth/auth-functions";
+import { requireAuthenticatedRoute } from "@/auth/route-guards";
 import { useVault, type ThemeMode } from "@/lib/vault-store";
 
 export const Route = createFileRoute("/settings")({
+  beforeLoad: requireAuthenticatedRoute,
   head: () => ({
     meta: [
       { title: "Impostazioni — Warranty Vault" },
@@ -41,8 +44,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function SettingsPage() {
-  const { user, prefs, setPrefs, signOut } = useVault();
+  const { user, prefs, setPrefs } = useVault();
   const navigate = useNavigate();
+
+  if (!user) return null;
 
   return (
     <AppShell>
@@ -51,9 +56,18 @@ function SettingsPage() {
       <div className="relative z-10 space-y-5 px-5 pb-32">
         <Section title="Account">
           <div className="flex items-center gap-3">
-            <span className="grid size-11 place-items-center rounded-full bg-accent/12 font-display text-[14px] font-bold text-accent">
-              {user.initials}
-            </span>
+            {user.picture ? (
+              <img
+                src={user.picture}
+                alt=""
+                referrerPolicy="no-referrer"
+                className="size-11 rounded-full object-cover"
+              />
+            ) : (
+              <span className="grid size-11 place-items-center rounded-full bg-accent/12 font-display text-[14px] font-bold text-accent">
+                {user.initials}
+              </span>
+            )}
             <div className="min-w-0">
               <p className="font-display text-[16px] tracking-tight">{user.name}</p>
               <p className="truncate text-[13px] text-muted-foreground">{user.email}</p>
@@ -152,8 +166,8 @@ function SettingsPage() {
         <VaultButton
           variant="outline"
           className="w-full"
-          onClick={() => {
-            signOut();
+          onClick={async () => {
+            await logout();
             navigate({ to: "/" });
           }}
         >

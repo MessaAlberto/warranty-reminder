@@ -15,7 +15,10 @@ import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as AuthDeniedRouteImport } from './routes/auth.denied'
+import { Route as AuthStartRouteImport } from './routes/auth.start'
 import { Route as PurchaseIdRouteImport } from './routes/purchase.$id'
+import { Route as AuthGoogleCallbackRouteImport } from './routes/auth.google.callback'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -47,9 +50,24 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthDeniedRoute = AuthDeniedRouteImport.update({
+  id: '/auth/denied',
+  path: '/auth/denied',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthStartRoute = AuthStartRouteImport.update({
+  id: '/auth/start',
+  path: '/auth/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PurchaseIdRoute = PurchaseIdRouteImport.update({
   id: '/purchase/$id',
   path: '/purchase/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthGoogleCallbackRoute = AuthGoogleCallbackRouteImport.update({
+  id: '/auth/google/callback',
+  path: '/auth/google/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -60,7 +78,10 @@ export interface FileRoutesByFullPath {
   '/home': typeof HomeRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/auth/denied': typeof AuthDeniedRoute
+  '/auth/start': typeof AuthStartRoute
   '/purchase/$id': typeof PurchaseIdRoute
+  '/auth/google/callback': typeof AuthGoogleCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -69,7 +90,10 @@ export interface FileRoutesByTo {
   '/home': typeof HomeRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/auth/denied': typeof AuthDeniedRoute
+  '/auth/start': typeof AuthStartRoute
   '/purchase/$id': typeof PurchaseIdRoute
+  '/auth/google/callback': typeof AuthGoogleCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -79,7 +103,10 @@ export interface FileRoutesById {
   '/home': typeof HomeRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/auth/denied': typeof AuthDeniedRoute
+  '/auth/start': typeof AuthStartRoute
   '/purchase/$id': typeof PurchaseIdRoute
+  '/auth/google/callback': typeof AuthGoogleCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -90,7 +117,10 @@ export interface FileRouteTypes {
     | '/home'
     | '/search'
     | '/settings'
+    | '/auth/denied'
+    | '/auth/start'
     | '/purchase/$id'
+    | '/auth/google/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -99,7 +129,10 @@ export interface FileRouteTypes {
     | '/home'
     | '/search'
     | '/settings'
+    | '/auth/denied'
+    | '/auth/start'
     | '/purchase/$id'
+    | '/auth/google/callback'
   id:
     | '__root__'
     | '/'
@@ -108,7 +141,10 @@ export interface FileRouteTypes {
     | '/home'
     | '/search'
     | '/settings'
+    | '/auth/denied'
+    | '/auth/start'
     | '/purchase/$id'
+    | '/auth/google/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -118,7 +154,10 @@ export interface RootRouteChildren {
   HomeRoute: typeof HomeRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
+  AuthDeniedRoute: typeof AuthDeniedRoute
+  AuthStartRoute: typeof AuthStartRoute
   PurchaseIdRoute: typeof PurchaseIdRoute
+  AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -165,11 +204,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/denied': {
+      id: '/auth/denied'
+      path: '/auth/denied'
+      fullPath: '/auth/denied'
+      preLoaderRoute: typeof AuthDeniedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/start': {
+      id: '/auth/start'
+      path: '/auth/start'
+      fullPath: '/auth/start'
+      preLoaderRoute: typeof AuthStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/purchase/$id': {
       id: '/purchase/$id'
       path: '/purchase/$id'
       fullPath: '/purchase/$id'
       preLoaderRoute: typeof PurchaseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/google/callback': {
+      id: '/auth/google/callback'
+      path: '/auth/google/callback'
+      fullPath: '/auth/google/callback'
+      preLoaderRoute: typeof AuthGoogleCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -182,7 +242,10 @@ const rootRouteChildren: RootRouteChildren = {
   HomeRoute: HomeRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
+  AuthDeniedRoute: AuthDeniedRoute,
+  AuthStartRoute: AuthStartRoute,
   PurchaseIdRoute: PurchaseIdRoute,
+  AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

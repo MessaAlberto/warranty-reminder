@@ -1,15 +1,8 @@
-import type { AuthService, ReceiptService } from "./service-types";
+import type { ReceiptService } from "./service-types";
 import { MOCK_ANALYSIS_RESULT, MOCK_RECEIPTS } from "./mock-data";
 import type { Receipt } from "./vault-types";
 
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-
-export const mockAuthService: AuthService = {
-  async signInWithGoogle() {
-    await wait(1100);
-    return { name: "Alberto", email: "alberto@example.com", initials: "AM" };
-  },
-};
 
 export const mockReceiptService: ReceiptService = {
   async fetchReceipts(): Promise<Receipt[]> {
