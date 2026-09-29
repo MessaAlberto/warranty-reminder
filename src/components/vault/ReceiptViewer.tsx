@@ -270,6 +270,7 @@ export function ReceiptViewer({
         }}
       >
         <img
+          data-native-context-menu="true"
           ref={imageRef}
           src={image.url}
           alt={`Scontrino ${image.label}`}

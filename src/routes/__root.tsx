@@ -16,6 +16,7 @@ import { listReceipts } from "../drive/receipt-functions";
 import appCss from "../styles.css?url";
 import { VaultProvider } from "../lib/vault-store";
 import { AsyncOperationProvider } from "../components/vault/AsyncOperationProvider";
+import { MobileInteractionPolicy } from "../components/vault/MobileInteractionPolicy";
 
 function NotFoundComponent() {
   return (
@@ -149,6 +150,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <VaultProvider user={user} initialReceipts={receipts}>
         <AsyncOperationProvider>
+          <MobileInteractionPolicy />
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
           <Toaster position="top-center" />

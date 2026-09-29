@@ -136,6 +136,34 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
     overscroll-behavior-y: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  input,
+  textarea,
+  [contenteditable]:not([contenteditable="false"]),
+  code,
+  pre {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
+
+  a[href],
+  button,
+  select,
+  summary,
+  [role="button"],
+  [role="link"],
+  [role="tab"] {
+    -webkit-touch-callout: none;
+  }
+
+  [data-native-context-menu="true"],
+  [data-allow-context-menu="true"] {
+    -webkit-touch-callout: default;
   }
 
   :focus-visible {

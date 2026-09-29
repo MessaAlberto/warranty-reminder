@@ -155,6 +155,7 @@ export function ReceiptUploader({
               className="glass flex items-center gap-3 rounded-2xl p-2.5 ring-1 ring-border"
             >
               <img
+                data-native-context-menu="true"
                 src={image.url}
                 alt={`Anteprima ${image.label}`}
                 loading="lazy"

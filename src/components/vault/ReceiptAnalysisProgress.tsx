@@ -21,7 +21,10 @@ export function ReceiptAnalysisProgress({
 
   useEffect(() => {
     if (step >= STEPS.length - 1) return;
-    const timeout = setTimeout(() => setStep((current) => Math.min(current + 1, STEPS.length - 1)), 1100);
+    const timeout = setTimeout(
+      () => setStep((current) => Math.min(current + 1, STEPS.length - 1)),
+      1100,
+    );
     return () => clearTimeout(timeout);
   }, [step]);
 
@@ -33,6 +36,7 @@ export function ReceiptAnalysisProgress({
         <div className="relative h-56 w-full overflow-hidden">
           {imageUrl ? (
             <img
+              data-native-context-menu="true"
               src={imageUrl}
               alt="Scontrino in analisi"
               loading="lazy"
@@ -41,8 +45,8 @@ export function ReceiptAnalysisProgress({
               className="w-full object-cover object-top opacity-80"
             />
           ) : null}
-          <div className="scan-line absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-transparent via-accent/35 to-transparent" />
-          <div className="absolute inset-0 ring-1 ring-inset ring-accent/30" />
+          <div className="scan-line pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-transparent via-accent/35 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-accent/30" />
         </div>
         <div className="space-y-2 p-4">
           {[0, 1, 2].map((index) => (

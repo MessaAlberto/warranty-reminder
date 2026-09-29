@@ -383,6 +383,7 @@ function PurchasePage() {
                           aria-label={`Apri ${img.label} a schermo intero`}
                         >
                           <img
+                            data-native-context-menu="true"
                             src={img.url}
                             alt={img.label}
                             loading="lazy"
