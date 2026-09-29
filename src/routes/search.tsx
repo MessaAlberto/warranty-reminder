@@ -10,13 +10,13 @@ import { SkeletonList } from "@/components/vault/Skeletons";
 import { WarrantyCard } from "@/components/vault/WarrantyCard";
 import { useVault } from "@/lib/vault-store";
 import { requireAuthenticatedRoute } from "@/auth/route-guards";
+import { CATEGORY_LABEL, PRODUCT_CATEGORIES } from "@/lib/vault-types";
 import { daysLeft, formatShortDate } from "@/lib/warranty";
 
 const FILTERS: readonly FilterOption[] = [
   { id: "all", label: "Tutte" },
   { id: "soon", label: "In scadenza" },
-  { id: "elettrodomestici", label: "Elettrodomestici" },
-  { id: "elettronica", label: "Elettronica" },
+  ...PRODUCT_CATEGORIES.map((category) => ({ id: category, label: CATEGORY_LABEL[category] })),
   { id: "recent", label: "Aggiunti di recente" },
 ];
 
@@ -47,11 +47,7 @@ function SearchPage() {
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     return receipts.filter((r) => {
-      const haystack = [
-        r.store,
-        formatShortDate(r.purchaseDate),
-        ...r.products.map((p) => p.name),
-      ]
+      const haystack = [r.store, formatShortDate(r.purchaseDate), ...r.products.map((p) => p.name)]
         .join(" ")
         .toLowerCase();
       if (q && !haystack.includes(q)) return false;
@@ -65,8 +61,12 @@ function SearchPage() {
       if (filter === "recent") {
         return daysLeft(r.createdAt) > -60;
       }
-      if (filter === "elettrodomestici" || filter === "elettronica") {
-        return r.products.some((p) => p.category === filter);
+      if (PRODUCT_CATEGORIES.some((category) => category === filter)) {
+        return r.products.some(
+          (p) =>
+            p.category === filter ||
+            (filter === "casa-arredamento" && p.category === "arredamento"),
+        );
       }
       return true;
     });

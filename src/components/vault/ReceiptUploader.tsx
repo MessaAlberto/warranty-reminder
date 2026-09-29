@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Camera, ImagePlus, Loader2, Trash2 } from "lucide-react";
 import { prepareReceiptImages, releaseLocalReceiptImage } from "@/lib/receipt-image-preprocessing";
 import type { PendingReceiptImage } from "@/lib/vault-types";
@@ -15,8 +15,35 @@ export function ReceiptUploader({
 }) {
   const cameraInput = useRef<HTMLInputElement>(null);
   const galleryInput = useRef<HTMLInputElement>(null);
+  const itemElements = useRef(new Map<string, HTMLLIElement>());
+  const previousPositions = useRef(new Map<string, DOMRect>());
   const [preparing, setPreparing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useLayoutEffect(() => {
+    const nextPositions = new Map<string, DOMRect>();
+    for (const image of images) {
+      const element = itemElements.current.get(image.id);
+      if (!element) continue;
+      const next = element.getBoundingClientRect();
+      const previous = previousPositions.current.get(image.id);
+      nextPositions.set(image.id, next);
+      if (
+        previous &&
+        previous.top !== next.top &&
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ) {
+        element.animate(
+          [
+            { transform: `translateY(${previous.top - next.top}px)` },
+            { transform: "translateY(0)" },
+          ],
+          { duration: 220, easing: "cubic-bezier(0.32, 0.72, 0, 1)" },
+        );
+      }
+    }
+    previousPositions.current = nextPositions;
+  }, [images]);
 
   const relabel = (next: PendingReceiptImage[]) =>
     next.map((image, index) => ({
@@ -121,6 +148,10 @@ export function ReceiptUploader({
           {images.map((image, index) => (
             <li
               key={image.id}
+              ref={(element) => {
+                if (element) itemElements.current.set(image.id, element);
+                else itemElements.current.delete(image.id);
+              }}
               className="glass flex items-center gap-3 rounded-2xl p-2.5 ring-1 ring-border"
             >
               <img

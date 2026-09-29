@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { ChevronDown, Trash2 } from "lucide-react";
-import { CATEGORY_LABEL, type Product, type ProductCategory } from "@/lib/vault-types";
+import {
+  CATEGORY_LABEL,
+  PRODUCT_CATEGORIES,
+  selectableCategory,
+  type Product,
+  type ProductCategory,
+} from "@/lib/vault-types";
 import { addMonths, formatDate, formatPrice } from "@/lib/warranty";
 import { Field, TextInput } from "./controls";
 
@@ -108,13 +114,13 @@ export function ProductForm({
             {(id) => (
               <select
                 id={id}
-                value={product.category}
+                value={selectableCategory(product.category)}
                 onChange={(e) => set({ category: e.target.value as ProductCategory })}
                 className="min-h-12 w-full rounded-xl bg-background/60 px-3 text-[15px] ring-1 ring-border outline-none focus:ring-accent"
               >
-                {Object.entries(CATEGORY_LABEL).map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {v}
+                {PRODUCT_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {CATEGORY_LABEL[category]}
                   </option>
                 ))}
               </select>

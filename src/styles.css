@@ -116,6 +116,7 @@
 
   html {
     -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
@@ -134,6 +135,7 @@
     -webkit-font-smoothing: antialiased;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    overscroll-behavior-y: none;
   }
 
   :focus-visible {
@@ -147,6 +149,13 @@
   input[type="checkbox"],
   input[type="radio"] {
     cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
   }
 
   button:disabled {
@@ -275,5 +284,13 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
   }
 }

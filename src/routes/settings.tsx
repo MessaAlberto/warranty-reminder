@@ -1,13 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { CheckCircle2, HardDrive, Loader2, TriangleAlert, Users } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import { CheckCircle2, HardDrive, TriangleAlert, Users } from "lucide-react";
 import { AppShell } from "@/components/vault/AppShell";
 import { PageHeader } from "@/components/vault/PageHeader";
 import { VaultButton } from "@/components/vault/controls";
 import { logout } from "@/auth/auth-functions";
 import { requireAuthenticatedRoute } from "@/auth/route-guards";
-import { getDriveSettings, testConfiguredDriveConnection } from "@/drive/drive-functions";
+import { getDriveSettings } from "@/drive/drive-functions";
 import type { DriveStorageStatus } from "@/drive/drive-types";
 import { useVault, type ThemeMode } from "@/lib/vault-store";
 
@@ -196,27 +194,6 @@ function DriveStorageSection({
   initialStatus: DriveStorageStatus;
   canConfigure: boolean;
 }) {
-  const [status, setStatus] = useState(initialStatus);
-  const [testing, setTesting] = useState(false);
-
-  const testConnection = async () => {
-    setTesting(true);
-    try {
-      await testConfiguredDriveConnection();
-      setStatus("connected");
-      toast.success("Connessione a Google Drive riuscita");
-    } catch (error) {
-      setStatus("connection_error");
-      const description =
-        error instanceof Error && error.message
-          ? error.message
-          : "Controlla la configurazione e riprova.";
-      toast.error("Connessione a Google Drive non riuscita", { description });
-    } finally {
-      setTesting(false);
-    }
-  };
-
   const statusCopy = {
     connected: {
       label: "Connesso",
@@ -230,10 +207,10 @@ function DriveStorageSection({
     },
     connection_error: {
       label: "Errore di connessione",
-      detail: "Controlla la configurazione o ripeti il test.",
+      detail: "Controlla la configurazione di Google Drive.",
       icon: TriangleAlert,
     },
-  }[status];
+  }[initialStatus];
   const StatusIcon = statusCopy.icon;
 
   return (
@@ -245,8 +222,8 @@ function DriveStorageSection({
           <p className="mt-1 text-[13px] text-muted-foreground">{statusCopy.detail}</p>
         </div>
       </div>
-      <div className="flex gap-2 border-t border-border pt-4">
-        {canConfigure && status !== "connected" ? (
+      {canConfigure && initialStatus !== "connected" ? (
+        <div className="flex gap-2 border-t border-border pt-4">
           <button
             type="button"
             onClick={() => window.location.assign("/auth/drive/start")}
@@ -254,22 +231,8 @@ function DriveStorageSection({
           >
             Configura archiviazione
           </button>
-        ) : null}
-        {status !== "not_configured" ? (
-          <button
-            type="button"
-            onClick={testConnection}
-            disabled={testing}
-            className="min-h-10 rounded-full px-4 font-mono text-[10px] uppercase tracking-wider ring-1 ring-border disabled:opacity-60"
-          >
-            {testing ? (
-              <Loader2 className="size-3 animate-spin" aria-hidden />
-            ) : (
-              "Testa connessione"
-            )}
-          </button>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </Section>
   );
 }

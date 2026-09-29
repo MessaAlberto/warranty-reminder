@@ -24,6 +24,7 @@ import { requireAuthenticatedRoute } from "@/auth/route-guards";
 import { useVault } from "@/lib/vault-store";
 import { receiptImageFormData } from "@/lib/receipt-image-form-data";
 import { releaseLocalReceiptImage } from "@/lib/receipt-image-preprocessing";
+import { shareOrDownloadReceiptImage } from "@/lib/share-receipt-image";
 import type { PendingReceiptImage, Receipt } from "@/lib/vault-types";
 import { CATEGORY_LABEL } from "@/lib/vault-types";
 import {
@@ -76,6 +77,8 @@ function PurchasePage() {
   const [detailedReceipt, setDetailedReceipt] = useState<Receipt | null>(null);
   const [showImages, setShowImages] = useState(false);
   const [viewer, setViewer] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState(0);
+  const [sharingImage, setSharingImage] = useState(false);
   const [keeping, setKeeping] = useState(false);
 
   useEffect(() => {
@@ -86,6 +89,7 @@ function PurchasePage() {
     setImageLoading(false);
     setLoadedImageIds(new Set());
     setViewer(false);
+    setViewerIndex(0);
     setEditing(false);
     setLoadingMetadata(true);
     void getReceipt({ data: { id } })
@@ -176,6 +180,23 @@ function PurchasePage() {
     setImageLoading(false);
     setLoadedImageIds(new Set());
     toast.error("Impossibile caricare l'immagine dello scontrino. Riprova.");
+  };
+
+  const shareFirstImage = async () => {
+    const image = detail.images[0];
+    if (!image || sharingImage) return;
+    setSharingImage(true);
+    try {
+      const result = await shareOrDownloadReceiptImage(image);
+      if (result === "downloaded") toast.success("Download dello scontrino avviato");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      toast.error("Impossibile salvare o condividere lo scontrino", {
+        description: error instanceof Error ? error.message : "Riprova.",
+      });
+    } finally {
+      setSharingImage(false);
+    }
   };
 
   const startEdit = () => {
@@ -286,11 +307,7 @@ function PurchasePage() {
                 }
                 actions={
                   kept ? null : (
-                    <VaultButton
-                      variant="outline"
-                      onClick={keepReceipt}
-                      disabled={keeping || busy}
-                    >
+                    <VaultButton variant="outline" onClick={keepReceipt} disabled={keeping || busy}>
                       {keeping ? (
                         <>
                           <Loader2 className="size-4 animate-spin" aria-hidden /> Salvataggio…
@@ -358,7 +375,10 @@ function PurchasePage() {
                       {detail.images.map((img, i) => (
                         <button
                           key={img.id}
-                          onClick={() => setViewer(true)}
+                          onClick={() => {
+                            setViewerIndex(i);
+                            setViewer(true);
+                          }}
                           className="overflow-hidden rounded-xl ring-1 ring-border"
                           aria-label={`Apri ${img.label} a schermo intero`}
                         >
@@ -379,9 +399,26 @@ function PurchasePage() {
                     <VaultButton
                       variant="outline"
                       className="mt-3 w-full"
-                      onClick={() => setViewer(true)}
+                      onClick={() => {
+                        setViewerIndex(0);
+                        setViewer(true);
+                      }}
                     >
                       Apri a schermo intero
+                    </VaultButton>
+                    <VaultButton
+                      variant="outline"
+                      className="mt-2 w-full"
+                      onClick={() => void shareFirstImage()}
+                      disabled={sharingImage}
+                    >
+                      {sharingImage ? (
+                        <>
+                          <Loader2 className="size-4 animate-spin" aria-hidden /> Preparazione…
+                        </>
+                      ) : (
+                        "Salva o condividi"
+                      )}
                     </VaultButton>
                   </>
                 ) : imageLoading ? (
@@ -527,7 +564,11 @@ function PurchasePage() {
       />
 
       {viewer && detail.images.length ? (
-        <ReceiptViewer images={detail.images} onClose={() => setViewer(false)} />
+        <ReceiptViewer
+          images={detail.images}
+          startIndex={viewerIndex}
+          onClose={() => setViewer(false)}
+        />
       ) : null}
     </AppShell>
   );

@@ -35,18 +35,18 @@ function Welcome() {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-background text-foreground">
+    <div className="relative h-[100dvh] min-h-[100svh] overflow-hidden bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0">
         <div className="sweep absolute -top-16 -right-10 h-72 w-72 rounded-full bg-accent/12 blur-2xl" />
         <div className="sweep absolute bottom-10 -left-16 h-80 w-80 rounded-full bg-accent/6 blur-2xl" />
       </div>
 
-      <div className="relative mx-auto flex w-full max-w-[430px] flex-1 flex-col px-6 pt-20 pb-[max(2rem,env(safe-area-inset-bottom))]">
+      <div className="relative mx-auto flex h-full w-full max-w-[430px] flex-col overflow-y-auto px-6 pt-[max(clamp(1.5rem,8dvh,5rem),env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <div className="rise">
           <div className="grid size-12 place-items-center rounded-2xl bg-accent text-accent-foreground shadow-accent">
             <ShieldCheck className="size-6" strokeWidth={2} aria-hidden />
           </div>
-          <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+          <p className="mt-[clamp(1rem,4dvh,2rem)] font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
             Warranty Vault
           </p>
           <h1 className="mt-2 font-display text-[34px] leading-[1.05] tracking-tight">
@@ -60,7 +60,10 @@ function Welcome() {
           </p>
         </div>
 
-        <ul className="rise mt-10 space-y-2" style={{ animationDelay: "80ms" }}>
+        <ul
+          className="rise mt-[clamp(1.25rem,4dvh,2.5rem)] space-y-2"
+          style={{ animationDelay: "80ms" }}
+        >
           {[
             "Riconoscimento automatico di negozio, data e prodotti",
             "Garanzia di 24 mesi assegnata di default, modificabile",
@@ -76,7 +79,7 @@ function Welcome() {
           ))}
         </ul>
 
-        <div className="mt-auto pt-10">
+        <div className="mt-auto pt-[clamp(1.25rem,4dvh,2.5rem)]">
           <button
             onClick={handle}
             disabled={busy}
