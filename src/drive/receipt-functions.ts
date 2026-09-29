@@ -9,6 +9,12 @@ const idValidator = (data: { id: string }) => {
   return data;
 };
 
+const autoDeleteValidator = (data: { id: string; autoDelete: boolean }) => {
+  if (!data.id.trim()) throw new Error("Receipt ID is required.");
+  if (typeof data.autoDelete !== "boolean") throw new Error("Auto-delete setting is invalid.");
+  return data;
+};
+
 function receiptFormValidator(data: unknown): FormData {
   if (!(data instanceof FormData)) throw new Error("Receipt image data is required.");
   const receipt = data.get("receipt");
@@ -107,6 +113,9 @@ export const updateReceiptWithImages = createServerFn({ method: "POST" })
 export const moveReceiptToTrash = createServerFn({ method: "POST" })
   .validator(idValidator)
   .handler(({ data }) => repository.moveReceiptToTrash(data.id));
+export const setReceiptAutoDelete = createServerFn({ method: "POST" })
+  .validator(autoDeleteValidator)
+  .handler(({ data }) => repository.setReceiptAutoDelete(data.id, data.autoDelete));
 export const restoreReceipt = createServerFn({ method: "POST" })
   .validator(idValidator)
   .handler(({ data }) => repository.restoreReceipt(data.id));

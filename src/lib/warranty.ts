@@ -76,8 +76,8 @@ export function remainingText(expiration: string, now = new Date()): string {
 export function deletionText(expiration: string, now = new Date()): string {
   const gone = -daysLeft(expiration, now);
   const left = 90 - gone;
-  if (left <= 0) return "In attesa di eliminazione";
-  return `Eliminazione prevista tra ${left} giorni`;
+  if (left <= 0) return "In attesa di archiviazione";
+  return `Archiviazione prevista tra ${left} giorni`;
 }
 
 const dateFmt = new Intl.DateTimeFormat("it-IT", {

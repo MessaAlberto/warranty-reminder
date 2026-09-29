@@ -10,6 +10,8 @@ export interface Product {
   warrantyMonths: number;
   /** ISO date string */
   warrantyExpiration: string;
+  /** Whether this receipt may be automatically archived after the warranty expires. */
+  autoDelete?: boolean | undefined;
   category: ProductCategory;
 }
 

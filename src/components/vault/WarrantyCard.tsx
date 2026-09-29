@@ -16,6 +16,11 @@ export function WarrantyCard({ receipt, delay = 0 }: { receipt: Receipt; delay?:
   if (!product) return null;
   const status = statusOf(product);
   const extra = receipt.products.length - 1;
+  const allProductsExpired = receipt.products.every((item) => statusOf(item) === "expired");
+  const latestWarrantyExpiration = receipt.products
+    .map((item) => item.warrantyExpiration)
+    .sort()
+    .at(-1);
 
   return (
     <Link
@@ -39,10 +44,17 @@ export function WarrantyCard({ receipt, delay = 0 }: { receipt: Receipt; delay?:
       <p className="mt-3 font-mono text-[11px] text-muted-foreground">
         {status === "expired" ? (
           <>
-            Scaduta il {formatShortDate(product.warrantyExpiration)} ·{" "}
-            <span className="font-medium text-foreground">
-              {deletionText(product.warrantyExpiration)}
-            </span>
+            Scaduta il {formatShortDate(product.warrantyExpiration)}
+            {allProductsExpired && latestWarrantyExpiration ? (
+              <>
+                {" "}·{" "}
+                <span className="font-medium text-foreground">
+                  {deletionText(latestWarrantyExpiration)}
+                </span>
+              </>
+            ) : extra > 0 ? (
+              <> · altri prodotti sullo scontrino possono essere ancora coperti</>
+            ) : null}
           </>
         ) : (
           <>

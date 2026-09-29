@@ -14,7 +14,12 @@ import { SkeletonDetail, SkeletonImage } from "@/components/vault/Skeletons";
 import { WarrantyProgress } from "@/components/vault/WarrantyProgress";
 import { WarrantyStatusBadge } from "@/components/vault/WarrantyStatusBadge";
 import { Field, TextInput, VaultButton } from "@/components/vault/controls";
-import { moveReceiptToTrash, getReceipt, updateReceiptWithImages } from "@/drive/receipt-functions";
+import {
+  getReceipt,
+  moveReceiptToTrash,
+  setReceiptAutoDelete,
+  updateReceiptWithImages,
+} from "@/drive/receipt-functions";
 import { requireAuthenticatedRoute } from "@/auth/route-guards";
 import { useVault } from "@/lib/vault-store";
 import { receiptImageFormData } from "@/lib/receipt-image-form-data";
@@ -71,7 +76,7 @@ function PurchasePage() {
   const [detailedReceipt, setDetailedReceipt] = useState<Receipt | null>(null);
   const [showImages, setShowImages] = useState(false);
   const [viewer, setViewer] = useState(false);
-  const [kept, setKept] = useState(false);
+  const [keeping, setKeeping] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -145,6 +150,12 @@ function PurchasePage() {
   const product = detail.products[0]!;
   const status = statusOf(product);
   const current = draft ?? detail;
+  const allProductsExpired = detail.products.every((item) => statusOf(item) === "expired");
+  const latestWarrantyExpiration = detail.products
+    .map((item) => item.warrantyExpiration)
+    .sort()
+    .at(-1);
+  const kept = detail.products.some((item) => item.autoDelete === false);
 
   const openReceipt = () => {
     setImageRequested(true);
@@ -197,6 +208,26 @@ function PurchasePage() {
     }
   };
 
+  const keepReceipt = async () => {
+    setKeeping(true);
+    try {
+      await runCritical({ message: "Conservazione scontrino..." }, async () => {
+        const saved = await setReceiptAutoDelete({
+          data: { id: detail.id, autoDelete: false },
+        });
+        updateReceipt(saved);
+        setDetailedReceipt(saved);
+        toast.success("Scontrino conservato");
+      });
+    } catch (error) {
+      toast.error("Impossibile conservare lo scontrino", {
+        description: error instanceof Error ? error.message : "Riprova.",
+      });
+    } finally {
+      setKeeping(false);
+    }
+  };
+
   const doDelete = async () => {
     setDeleting(true);
     try {
@@ -244,25 +275,31 @@ function PurchasePage() {
               />
             </div>
 
-            {status === "expired" ? (
+            {allProductsExpired && latestWarrantyExpiration ? (
               <NoticeBanner
                 tone={kept ? "info" : "warn"}
-                title={kept ? "Scontrino conservato" : "Garanzia scaduta"}
+                title={kept ? "Scontrino conservato" : "Garanzie scadute"}
                 description={
                   kept
-                    ? "Questo scontrino non verrà eliminato automaticamente."
-                    : deletionText(product.warrantyExpiration)
+                    ? "Questo scontrino resterà nel vault e non verrà archiviato automaticamente."
+                    : deletionText(latestWarrantyExpiration)
                 }
                 actions={
                   kept ? null : (
                     <VaultButton
                       variant="outline"
-                      onClick={() => {
-                        setKept(true);
-                        toast.success("Scontrino conservato");
-                      }}
+                      onClick={keepReceipt}
+                      disabled={keeping || busy}
                     >
-                      <Archive className="size-4" aria-hidden /> Conserva scontrino
+                      {keeping ? (
+                        <>
+                          <Loader2 className="size-4 animate-spin" aria-hidden /> Salvataggio…
+                        </>
+                      ) : (
+                        <>
+                          <Archive className="size-4" aria-hidden /> Conserva scontrino
+                        </>
+                      )}
                     </VaultButton>
                   )
                 }

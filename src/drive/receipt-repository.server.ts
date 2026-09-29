@@ -54,6 +54,7 @@ type StoredReceipt = {
   currency: string;
   createdAt: string;
   updatedAt: string;
+  trashedAt?: string | null;
   createdBy: string;
   status: "active" | "trash";
   notes: string | null;
@@ -74,6 +75,7 @@ type IndexEntry = Pick<
     | "price"
     | "warrantyEndDate"
     | "warrantyMonths"
+    | "autoDelete"
     | "category"
   >[];
 };
@@ -122,6 +124,60 @@ function escapeQuery(value: string) {
 }
 function now() {
   return new Date().toISOString();
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const AUTO_ARCHIVE_AFTER_DAYS = 90;
+const TRASH_GRACE_DAYS = 30;
+
+function isoDateToUtcMs(value: string): number | undefined {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return undefined;
+  const result = Date.UTC(year, month - 1, day);
+  const date = new Date(result);
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return undefined;
+  }
+  return result;
+}
+
+function daysSinceDate(value: string, todayIso: string): number | undefined {
+  const start = isoDateToUtcMs(value);
+  const end = isoDateToUtcMs(todayIso);
+  if (start === undefined || end === undefined) return undefined;
+  return Math.floor((end - start) / DAY_MS);
+}
+
+function latestWarrantyEndDate(
+  items: Array<Pick<StoredItem, "warrantyEndDate">>,
+): string | undefined {
+  if (!items.length) return undefined;
+  const dates = items.map((item) => item.warrantyEndDate);
+  if (dates.some((value) => isoDateToUtcMs(value) === undefined)) return undefined;
+  return dates.sort().at(-1);
+}
+
+function shouldAutoArchiveReceipt(receipt: StoredReceipt, todayIso: string): boolean {
+  if (receipt.status !== "active" || !receipt.items.length) return false;
+  if (receipt.items.some((item) => item.autoDelete === false)) return false;
+  const latestExpiration = latestWarrantyEndDate(receipt.items);
+  if (!latestExpiration) return false;
+  const daysExpired = daysSinceDate(latestExpiration, todayIso);
+  return daysExpired !== undefined && daysExpired >= AUTO_ARCHIVE_AFTER_DAYS;
+}
+
+function indexEntryCouldAutoArchive(entry: IndexEntry, todayIso: string): boolean {
+  if (entry.status !== "active" || !entry.items.length) return false;
+  if (entry.items.some((item) => item.autoDelete === false)) return false;
+  const latestExpiration = latestWarrantyEndDate(entry.items);
+  if (!latestExpiration) return false;
+  const daysExpired = daysSinceDate(latestExpiration, todayIso);
+  return daysExpired !== undefined && daysExpired >= AUTO_ARCHIVE_AFTER_DAYS;
 }
 
 async function listFiles(token: string, query: string) {
@@ -364,6 +420,7 @@ function toClient(receipt: StoredReceipt, includeImages = false): Receipt {
       price: item.price,
       warrantyMonths: item.warrantyMonths,
       warrantyExpiration: item.warrantyEndDate,
+      autoDelete: item.autoDelete !== false,
       category: item.category,
     })),
   };
@@ -380,13 +437,14 @@ function toIndex(receipt: StoredReceipt): IndexEntry {
     status: receipt.status,
     notes: receipt.notes,
     items: receipt.items.map(
-      ({ id, name, quantity, price, warrantyEndDate, warrantyMonths, category }) => ({
+      ({ id, name, quantity, price, warrantyEndDate, warrantyMonths, autoDelete, category }) => ({
         id,
         name,
         quantity,
         price,
         warrantyEndDate,
         warrantyMonths,
+        autoDelete,
         category,
       }),
     ),
@@ -429,6 +487,7 @@ function toStored(
     currency: "EUR",
     createdAt: existing?.createdAt ?? timestamp,
     updatedAt: timestamp,
+    trashedAt: existing?.trashedAt ?? null,
     createdBy: existing?.createdBy ?? userEmail,
     status: existing?.status ?? "active",
     notes: receipt.notes?.trim() || null,
@@ -444,7 +503,7 @@ function toStored(
       warrantyStartDate: receipt.purchaseDate,
       warrantyMonths: product.warrantyMonths,
       warrantyEndDate: product.warrantyExpiration,
-      autoDelete: true,
+      autoDelete: product.autoDelete ?? existing?.items[index]?.autoDelete ?? true,
       notes: null,
       category: product.category,
     })),
@@ -508,6 +567,7 @@ export async function listReceipts() {
         price: item.price,
         warrantyMonths: item.warrantyMonths,
         warrantyExpiration: item.warrantyEndDate,
+        autoDelete: item.autoDelete !== false,
         category: item.category,
       })),
     }));
@@ -763,6 +823,17 @@ async function moveFolder(
   if (!response.ok) throw new Error("Google Drive could not move the receipt.");
 }
 
+async function deleteDriveFilePermanently(token: string, fileId: string) {
+  const url = new URL(`${DRIVE_API}/files/${encodeURIComponent(fileId)}`);
+  url.searchParams.set("supportsAllDrives", "true");
+  const response = await fetch(url, {
+    method: "DELETE",
+    headers: headers(token),
+  });
+  if (response.status === 404) return;
+  if (!response.ok) throw new Error("Google Drive could not permanently delete the receipt.");
+}
+
 export async function moveReceiptToTrash(id: string) {
   await requireAuthenticatedUser();
   const token = await accessToken();
@@ -772,14 +843,35 @@ export async function moveReceiptToTrash(id: string) {
   const file = await receiptFile(token, folder);
   if (!file) throw new Error("Receipt metadata is missing.");
   const receipt = await readJson<StoredReceipt>(token, file);
+  const timestamp = now();
   receipt.status = "trash";
-  receipt.updatedAt = now();
+  receipt.updatedAt = timestamp;
+  receipt.trashedAt = timestamp;
   await writeJson(token, file, receipt);
   await moveFolder(token, folder, s.trashFolderId, s.receiptsFolderId);
   await updateIndex(token, s.indexFileId, (index) => ({
     ...index,
     receipts: index.receipts.filter((entry) => entry.id !== id),
   }));
+}
+
+export async function setReceiptAutoDelete(id: string, autoDelete: boolean) {
+  await requireAuthenticatedUser();
+  const token = await accessToken();
+  const s = await storage(token);
+  const folder = await folderForReceipt(token, s.receiptsFolderId, id);
+  if (!folder) throw new Error("Receipt not found.");
+  const file = await receiptFile(token, folder);
+  if (!file) throw new Error("Receipt metadata is missing.");
+  const receipt = await readJson<StoredReceipt>(token, file);
+  receipt.items = receipt.items.map((item) => ({ ...item, autoDelete }));
+  receipt.updatedAt = now();
+  await writeJson(token, file, receipt);
+  await updateIndex(token, s.indexFileId, (index) => ({
+    ...index,
+    receipts: [...index.receipts.filter((entry) => entry.id !== id), toIndex(receipt)],
+  }));
+  return toClient(receipt, true);
 }
 
 export async function restoreReceipt(id: string) {
@@ -793,6 +885,7 @@ export async function restoreReceipt(id: string) {
   const receipt = await readJson<StoredReceipt>(token, file);
   receipt.status = "active";
   receipt.updatedAt = now();
+  receipt.trashedAt = null;
   await writeJson(token, file, receipt);
   await moveFolder(token, folder, s.receiptsFolderId, s.trashFolderId);
   await updateIndex(token, s.indexFileId, (index) => ({
@@ -800,6 +893,96 @@ export async function restoreReceipt(id: string) {
     receipts: [...index.receipts.filter((entry) => entry.id !== id), toIndex(receipt)],
   }));
   return toClient(receipt);
+}
+
+export type AutomaticCleanupReport = {
+  archived: number;
+  permanentlyDeleted: number;
+  failures: number;
+};
+
+export async function runAutomaticCleanup(
+  currentDate = new Date(),
+): Promise<AutomaticCleanupReport> {
+  const token = await accessToken();
+  const s = await storage(token);
+  const todayIso = currentDate.toISOString().slice(0, 10);
+  const report: AutomaticCleanupReport = {
+    archived: 0,
+    permanentlyDeleted: 0,
+    failures: 0,
+  };
+
+  const index = await readJson<IndexDocument>(token, s.indexFileId);
+  const activeEntries = Array.isArray(index.receipts)
+    ? index.receipts.filter((entry) => indexEntryCouldAutoArchive(entry, todayIso))
+    : [];
+
+  for (const entry of activeEntries) {
+    try {
+      const folder = await folderForReceipt(token, s.receiptsFolderId, entry.id);
+      if (!folder) continue;
+      const file = await receiptFile(token, folder);
+      if (!file) continue;
+
+      const receipt = await readJson<StoredReceipt>(token, file);
+      if (!shouldAutoArchiveReceipt(receipt, todayIso)) continue;
+
+      const timestamp = currentDate.toISOString();
+      receipt.status = "trash";
+      receipt.updatedAt = timestamp;
+      receipt.trashedAt = timestamp;
+      await writeJson(token, file, receipt);
+      await moveFolder(token, folder, s.trashFolderId, s.receiptsFolderId);
+      await updateIndex(token, s.indexFileId, (current) => ({
+        ...current,
+        receipts: current.receipts.filter((candidate) => candidate.id !== receipt.id),
+      }));
+      report.archived += 1;
+    } catch (error) {
+      report.failures += 1;
+      console.error("[automatic-cleanup] Could not archive receipt", {
+        receiptId: entry.id,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  const trashFolders = await listFiles(
+    token,
+    `'${escapeQuery(s.trashFolderId)}' in parents and mimeType = '${FOLDER_MIME_TYPE}' and trashed = false`,
+  );
+
+  for (const folder of trashFolders) {
+    if (!folder.id) continue;
+    try {
+      const file = await receiptFile(token, folder.id);
+      if (!file) continue;
+
+      const receipt = await readJson<StoredReceipt>(token, file);
+      if (receipt.status !== "trash") continue;
+
+      const trashedAt = receipt.trashedAt ?? receipt.updatedAt;
+      const trashDate = trashedAt.slice(0, 10);
+      const daysInTrash = daysSinceDate(trashDate, todayIso);
+      if (daysInTrash === undefined || daysInTrash < TRASH_GRACE_DAYS) continue;
+
+      await deleteDriveFilePermanently(token, folder.id);
+      await updateIndex(token, s.indexFileId, (current) => ({
+        ...current,
+        receipts: current.receipts.filter((candidate) => candidate.id !== receipt.id),
+      }));
+      report.permanentlyDeleted += 1;
+    } catch (error) {
+      report.failures += 1;
+      console.error("[automatic-cleanup] Could not permanently delete receipt", {
+        folderId: folder.id,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  return report;
 }
 
 export async function rebuildIndex() {
