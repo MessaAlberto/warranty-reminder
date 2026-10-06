@@ -99,6 +99,17 @@ function Welcome() {
             <Lock className="size-3.5" aria-hidden />
             Spazio privato condiviso tra due persone.
           </p>
+          <nav
+            aria-label="Informazioni legali"
+            className="mt-3 flex justify-center gap-4 text-[11px] text-muted-foreground"
+          >
+            <a className="underline-offset-4 hover:underline" href="/privacy">
+              Privacy
+            </a>
+            <a className="underline-offset-4 hover:underline" href="/terms">
+              Termini di servizio
+            </a>
+          </nav>
         </div>
       </div>
     </div>

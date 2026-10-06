@@ -13,8 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AddRouteImport } from './routes/add'
 import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ApiCleanupRouteImport } from './routes/api.cleanup'
 import { Route as ApiOcrTestRouteImport } from './routes/api.ocr-test'
 import { Route as AuthDeniedRouteImport } from './routes/auth.denied'
@@ -46,6 +48,11 @@ const HomeRoute = HomeRouteImport.update({
   path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -54,6 +61,11 @@ const SearchRoute = SearchRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiCleanupRoute = ApiCleanupRouteImport.update({
@@ -113,8 +125,10 @@ export interface FileRoutesByFullPath {
   '/add': typeof AddRoute
   '/archive': typeof ArchiveRoute
   '/home': typeof HomeRoute
+  '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
   '/api/cleanup': typeof ApiCleanupRoute
   '/api/ocr-test': typeof ApiOcrTestRoute
   '/auth/denied': typeof AuthDeniedRoute
@@ -131,8 +145,10 @@ export interface FileRoutesByTo {
   '/add': typeof AddRoute
   '/archive': typeof ArchiveRoute
   '/home': typeof HomeRoute
+  '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
   '/api/cleanup': typeof ApiCleanupRoute
   '/api/ocr-test': typeof ApiOcrTestRoute
   '/auth/denied': typeof AuthDeniedRoute
@@ -150,8 +166,10 @@ export interface FileRoutesById {
   '/add': typeof AddRoute
   '/archive': typeof ArchiveRoute
   '/home': typeof HomeRoute
+  '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
   '/api/cleanup': typeof ApiCleanupRoute
   '/api/ocr-test': typeof ApiOcrTestRoute
   '/auth/denied': typeof AuthDeniedRoute
@@ -170,8 +188,10 @@ export interface FileRouteTypes {
     | '/add'
     | '/archive'
     | '/home'
+    | '/privacy'
     | '/search'
     | '/settings'
+    | '/terms'
     | '/api/cleanup'
     | '/api/ocr-test'
     | '/auth/denied'
@@ -188,8 +208,10 @@ export interface FileRouteTypes {
     | '/add'
     | '/archive'
     | '/home'
+    | '/privacy'
     | '/search'
     | '/settings'
+    | '/terms'
     | '/api/cleanup'
     | '/api/ocr-test'
     | '/auth/denied'
@@ -206,8 +228,10 @@ export interface FileRouteTypes {
     | '/add'
     | '/archive'
     | '/home'
+    | '/privacy'
     | '/search'
     | '/settings'
+    | '/terms'
     | '/api/cleanup'
     | '/api/ocr-test'
     | '/auth/denied'
@@ -225,8 +249,10 @@ export interface RootRouteChildren {
   AddRoute: typeof AddRoute
   ArchiveRoute: typeof ArchiveRoute
   HomeRoute: typeof HomeRoute
+  PrivacyRoute: typeof PrivacyRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
+  TermsRoute: typeof TermsRoute
   ApiCleanupRoute: typeof ApiCleanupRoute
   ApiOcrTestRoute: typeof ApiOcrTestRoute
   AuthDeniedRoute: typeof AuthDeniedRoute
@@ -269,6 +295,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/search': {
       id: '/search'
       path: '/search'
@@ -281,6 +314,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/cleanup': {
@@ -361,8 +401,10 @@ const rootRouteChildren: RootRouteChildren = {
   AddRoute: AddRoute,
   ArchiveRoute: ArchiveRoute,
   HomeRoute: HomeRoute,
+  PrivacyRoute: PrivacyRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
+  TermsRoute: TermsRoute,
   ApiCleanupRoute: ApiCleanupRoute,
   ApiOcrTestRoute: ApiOcrTestRoute,
   AuthDeniedRoute: AuthDeniedRoute,
